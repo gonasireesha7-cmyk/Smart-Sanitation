@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Sanitation — Report Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #eef3f2;
+    --panel: #0f2a2e;
+    --panel-2: #133438;
+    --screen: #f6faf9;
+    --ink: #0f2a2e;
+    --ink-soft: #4d6a6c;
+    --teal: #0e7c86;
+    --teal-dim: #cfe6e4;
+    --amber: #e8a33d;
+    --red: #c1443c;
+    --green: #2f8f5b;
+    --line: rgba(15,42,46,0.12);
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #dcecea 0%, transparent 60%),
+      radial-gradient(1000px 500px at 110% 10%, #e4efe9 0%, transparent 55%),
+      var(--bg);
+    min-height:100vh;
+    font-family:'Sora', sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:40px 16px 64px;
+  }
+  .rig{
+    width:100%;
+    max-width:480px;
+  }
+  .eyebrow-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    padding:0 4px;
+  }
+  .eyebrow-row .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  .eyebrow-row .status-dot{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--green);
+  }
+  .status-dot i{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 3px rgba(47,143,91,0.18);
+  }
+
+  /* device shell */
+  .device{
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border-radius: calc(var(--radius) + 14px);
+    padding: 18px;
+    box-shadow:
+      0 30px 60px -25px rgba(15,42,46,0.55),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    position:relative;
+  }
+  .screw{
+    position:absolute;
+    width:8px;height:8px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #4a6a6d, #0a1e21);
+    box-shadow:0 1px 1px rgba(0,0,0,0.5);
+  }
+  .screw.tl{top:12px;left:12px;} .screw.tr{top:12px;right:12px;}
+  .screw.bl{bottom:12px;left:12px;} .screw.br{bottom:12px;right:12px;}
+
+  .device-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 6px 10px 18px;
+  }
+  .brand{
+    color:#f6faf9;
+  }
+  .brand .name{
+    font-weight:800;
+    font-size:19px;
+    letter-spacing:0.01em;
+  }
+  .brand .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:#9fc0bd;
+    margin-top:2px;
+  }
+  .vent{
+    display:grid;
+    grid-template-columns:repeat(3,4px);
+    gap:3px;
+  }
+  .vent i{width:4px;height:14px;background:rgba(255,255,255,0.15);border-radius:2px;}
+
+  /* screen */
+  .screen{
+    background: var(--screen);
+    border-radius: var(--radius);
+    padding: 20px 16px 16px;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  .field-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin: 0 2px 6px;
+    display:flex;
+    justify-content:space-between;
+  }
+  select, input[type=text], textarea{
+    width:100%;
+    font-family:'Sora', sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    padding:11px 12px;
+    outline:none;
+    transition: border-color .15s ease;
+  }
+  select:focus, input[type=text]:focus, textarea:focus{
+    border-color: var(--teal);
+  }
+  textarea{resize:vertical; min-height:54px; font-size:14px;}
+
+  .block{margin-bottom:16px;}
+
+  .tiles{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .tile{
+    position:relative;
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius:14px;
+    padding:14px 12px 12px;
+    cursor:pointer;
+    user-select:none;
+    transition: border-color .15s ease, transform .08s ease, background .15s ease;
+    text-align:left;
+  }
+  .tile:active{transform:scale(0.98);}
+  .tile .ic{font-size:22px; line-height:1;}
+  .tile .lb{
+    display:block;
+    margin-top:8px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .tile .lv{
+    display:block;
+    margin-top:2px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+  }
+  .tile.sel{
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+  .tile.sel .lv{color:var(--teal);}
+  .tile .check{
+    position:absolute;
+    top:10px; right:10px;
+    width:16px;height:16px;
+    border-radius:5px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tile.sel .check{
+    background:var(--teal);
+    border-color:var(--teal);
+    color:#fff;
+    font-size:11px;
+  }
+
+  .urgency{
+    display:flex;
+    gap:8px;
+  }
+  .urg-opt{
+    flex:1;
+    text-align:center;
+    padding:9px 6px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .urg-opt[data-level="low"].sel{border-color:var(--green); color:var(--green); background:#eaf6ef;}
+  .urg-opt[data-level="medium"].sel{border-color:var(--amber); color:#9a6a12; background:#fdf2e0;}
+  .urg-opt[data-level="high"].sel{border-color:var(--red); color:var(--red); background:#fbeaea;}
+
+  .report-btn{
+    width:100%;
+    border:none;
+    border-radius:14px;
+    padding:15px;
+    font-family:'Sora', sans-serif;
+    font-size:15px;
+    font-weight:700;
+    color:#fff;
+    background: linear-gradient(180deg, #16a394, #0e7c86);
+    box-shadow: 0 10px 20px -8px rgba(14,124,134,0.55);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    letter-spacing:0.01em;
+  }
+  .report-btn:disabled{
+    background:#c3d3d1;
+    box-shadow:none;
+    cursor:not-allowed;
+    color:#7f9391;
+  }
+  .report-btn:active:not(:disabled){transform:translateY(1px);}
+
+  .hint{
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:10px;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%; bottom:22px;
+    transform:translate(-50%, 20px);
+    background:var(--panel);
+    color:#f6faf9;
+    padding:12px 18px;
+    border-radius:12px;
+    font-size:13px;
+    font-family:'IBM Plex Mono', monospace;
+    opacity:0;
+    transition: all .25s ease;
+    pointer-events:none;
+    max-width:90vw;
+    text-align:center;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+
+  .config{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:14px;
+    background:rgba(255,255,255,0.55);
+    border:1px dashed var(--line);
+  }
+  .config summary{
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+  }
+  .config-body{margin-top:12px;}
+  .config-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    line-height:1.5;
+    margin-top:10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <div class="eyebrow-row">
+    <span class="tag">unit / kiosk report console</span>
+    <span class="status-dot"><i></i>online</span>
+  </div>
+
+  <div class="device">
+    <div class="screw tl"></div><div class="screw tr"></div>
+    <div class="screw bl"></div><div class="screw br"></div>
+
+    <div class="device-head">
+      <div class="brand">
+        <div class="name">Smart Sanitation</div>
+        <div class="sub">SIH26195 · Clean &amp; Green Tech</div>
+      </div>
+      <div class="vent"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="screen">
+
+      <div class="block">
+        <div class="field-label"><span>location</span><span id="charhint"></span></div>
+        <input type="text" id="location" placeholder="e.g. Block C, 2nd Floor, Men's Washroom 2" />
+      </div>
+
+      <div class="block">
+        <div class="field-label"><span>what's wrong — tap all that apply</span></div>
+        <div class="tiles" id="tiles">
+          <div class="tile" data-issue="Toilet Dirty">
+            <span class="check">✓</span>
+            <span class="ic">🚽</span>
+            <span class="lb">Toilet Dirty</span>
+            <span class="lv">needs cleaning</span>
+          </div>
+          <div class="tile" data-issue="Water Leakage">
+            <span class="check">✓</span>
+            <span class="ic">💧</span>
+            <span class="lb">Water Leakage</span>
+            <span class="lv">pipe / tap</span>
+          </div>
+          <div class="tile" data-issue="Soap Finished">
+            <span class="check">✓</span>
+            <span class="ic">🧴</span>
+            <span class="lb">Soap Finished</span>
+            <span class="lv">dispenser empty</span>
+          </div>
+          <div class="tile" data-issue="Tissue Finished">
+            <span class="check">✓</span>
+            <span class="ic">🧻</span>
+            <span class="lb">Tissue Finished</span>
+            <span class="lv">dispenser empty</span>
+          </div>
+          <div class="tile" data-issue="Dustbin Full">
+            <span class="check">✓</span>
+            <span class="ic">🗑️</span>
+            <span class="lb">Dustbin Full</span>
+            <span class="lv">needs emptying</span>
+          </div>
+          <div class="tile" data-issue="Bad Smell">
+            <span class="check">✓</span>
+            <span class="ic">🦠</span>
+            <span class="lb">Bad Smell</span>
+            <span class="lv">ventilation / drain</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="field-label"><span>urgency</span></div>
+        <div class="urgency" id="urgency">
+          <div class="urg-opt" data-level="low">Low</div>
+          <div class="urg-opt sel" data-level="medium">Medium</div>
+          <div class="urg-opt" data-level="high">High</div>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="field-label"><span>notes (optional)</span></div>
+        <textarea id="notes" placeholder="Anything staff should know before arriving..."></textarea>
+      </div>
+
+      <button class="report-btn" id="reportBtn">
+        <span>📲</span><span>Send Report on WhatsApp</span>
+      </button>
+      <div class="hint">Opens WhatsApp with your report ready to send</div>
+
+      <details class="config">
+        <summary>Facility staff number (demo setup)</summary>
+        <div class="config-body">
+          <div class="field-label"><span>whatsapp number to receive reports</span></div>
+          <input type="text" id="waNumber" placeholder="e.g. 91XXXXXXXXXX (country code, no + or spaces)" value="91XXXXXXXXXX" />
+          <p class="config-note">
+            This prototype sends reports using WhatsApp's click-to-chat link, so no server or paid API is needed for the demo — the user's own WhatsApp opens with the report pre-filled, ready to send to the facility number above. For production, this same trigger can call the WhatsApp Business Cloud API server-side to log every report automatically without the user tapping send, and to route it into a dashboard.
+          </p>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const tiles = document.querySelectorAll('.tile');
+  const urgOpts = document.querySelectorAll('.urg-opt');
+  const reportBtn = document.getElementById('reportBtn');
+  const locationInput = document.getElementById('location');
+  const notesInput = document.getElementById('notes');
+  const waNumberInput = document.getElementById('waNumber');
+  const toast = document.getElementById('toast');
+
+  let selectedIssues = new Set();
+  let urgency = 'Medium';
+
+  tiles.forEach(t => {
+    t.addEventListener('click', () => {
+      const issue = t.dataset.issue;
+      if (selectedIssues.has(issue)) {
+        selectedIssues.delete(issue);
+        t.classList.remove('sel');
+      } else {
+        selectedIssues.add(issue);
+        t.classList.add('sel');
+      }
+      updateButtonState();
+    });
+  });
+
+  urgOpts.forEach(o => {
+    o.addEventListener('click', () => {
+      urgOpts.forEach(x => x.classList.remove('sel'));
+      o.classList.add('sel');
+      urgency = o.textContent.trim();
+    });
+  });
+
+  function flash(el){
+    el.style.borderColor = 'var(--red)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1400);
+  }
+
+  function showToast(msg){
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  // kept so the tile/urgency handlers above don't error; button is always active now
+  function updateButtonState(){}
+
+  reportBtn.addEventListener('click', () => {
+    const loc = locationInput.value.trim();
+    const notes = notesInput.value.trim();
+    const rawNumber = waNumberInput.value.trim();
+    const number = rawNumber.replace(/[^0-9]/g, '');
+
+    if (selectedIssues.size === 0) {
+      showToast('Select at least one issue above');
+      return;
+    }
+    if (!loc) {
+      showToast('Enter a location first');
+      flash(locationInput);
+      return;
+    }
+    if (!number || number.length < 10) {
+      showToast('Enter a valid staff WhatsApp number (with country code)');
+      flash(waNumberInput);
+      return;
+    }
+
+    const now = new Date();
+    const timestamp = now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+
+    let message = `*Smart Sanitation Report*\n`;
+    message += `Location: ${loc}\n`;
+    message += `Issues: ${Array.from(selectedIssues).join(', ')}\n`;
+    message += `Urgency: ${urgency}\n`;
+    if (notes) message += `Notes: ${notes}\n`;
+    message += `Reported: ${timestamp}`;
+
+    const encoded = encodeURIComponent(message);
+    const url = `https://wa.me/${number}?text=${encoded}`;
+
+    // window.open first (keeps this page open); if the browser blocks the
+    // popup, fall back to navigating this tab there directly.
+    const win = window.open(url, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      window.location.href = url;
+    } else {
+      showToast('WhatsApp opened in a new tab — tap Send there to submit');
+    }
+  });
+</script>
+
+</body>
+</html>
